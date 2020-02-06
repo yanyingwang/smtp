@@ -1,0 +1,17 @@
+*.rkt~
+*.rkt#*
+.#*.rkt
+
+compiled/
+doc/
+scribblings/compiled/
+
+
+manual-fonts.css
+manual-racket.css
+manual-racket.js
+manual-style.css
+racket.css
+scribble-common.js
+scribble.css
+
