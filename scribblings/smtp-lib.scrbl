@@ -51,7 +51,7 @@ returns sender, recipients, subject infos of an @italic{email}'s header.
 returns sender, recipients, subject infos of an @italic{email}'s header.
 }
 
-@defproc[(send-mail [email mail?]
+@defproc[(send-smtp-mail [email mail?]
                     [#:host host string?]
                     [#:port port integer? 25]
                     [#:user username string? (mail-from mail)]
