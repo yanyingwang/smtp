@@ -61,7 +61,7 @@ commit the @italic{email} sending action.
 
 
 
-@section{Examples:}
+@section{Example}
 
 @codeblock[#:keep-lang-line? #f]|{
 (require smtp-lib)
