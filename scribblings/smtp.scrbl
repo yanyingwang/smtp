@@ -1,16 +1,16 @@
 #lang scribble/manual
-@require[@for-label[smtp-lib
+@require[@for-label[smtp
                     racket/base]]
 
-@title{smtp-lib}
+@title{smtp}
 @author[(author+email "yanyingwang" "yanyingwang1@gmail.com")]
 
 
-@defmodule[smtp-lib]
+@defmodule[smtp]
 
 send emails with SMTP protocol.
 
-@hyperlink["https://github.com/yanyingwang/smtp-lib" "source code"]
+@hyperlink["https://github.com/yanyingwang/smtp" "source code"]
 
 @[table-of-contents]
 

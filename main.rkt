@@ -4,7 +4,7 @@
          rnrs/bytevectors-6
          net/base64
          racket/tcp
-         racket/string
+         racket/list
          racket/format
          racket/string
          racket/port
@@ -20,23 +20,26 @@
          mail-subject
          mail-content
          mail-attachment-files
-         mail-header
+
          mail-header/info
          mail-header/content
          mail-header/attachment
-         mail-header/attachments
+         mail-header
+
          send-smtp-mail
          set-mail-sender!
          current-smtp-host
-         current-smtp-user
+         current-smtp-port
+         current-smtp-username
          current-smtp-password
          current-smtp-boundary)
 
 
-(define current-smtp-host (make-parameter ""))
-(define current-smtp-user (make-parameter ""))
-(define current-smtp-password (make-parameter ""))
-(define current-smtp-boundary (make-parameter @~a{------=_Part_@(uuid-string)}))
+(define current-smtp-host (make-parameter #f))
+(define current-smtp-port (make-parameter 25))
+(define current-smtp-username (make-parameter #f))
+(define current-smtp-password (make-parameter #f))
+(define current-smtp-boundary (make-parameter @~a{----=_Part_@(uuid-string)}))
 
 (define (b64en str)
   (bytes->string/utf-8 (base64-encode (string->bytes/utf-8 str))))
@@ -63,8 +66,8 @@
 
 (define (mail-header/info mail)
   @~a{
-      From: =?UTF-8?B?@(b64en-trim (mail-sender mail))?=
-      To: =?UTF-8?B?@(b64en-trim (string-join (mail-recipients mail) ", "))?=
+      From: @(mail-sender mail)
+      To: @(string-join (mail-recipients mail) ", ")
       Subject: =?UTF-8?B?@(b64en-trim (mail-subject mail))?=
       MIME-Version: 1.0
       Content-type: multipart/alternative; boundary=@(current-smtp-boundary)
@@ -73,27 +76,28 @@
 
 (define (mail-header/content mail)
   @~a{
-      @(current-smtp-boundary)
+      --@(current-smtp-boundary)
       Content-Type: text/plain; charset=UTF-8; format=flowed
       Content-Disposition: inline
 
       @(mail-content mail)
       })
 
-(define (mail-header/attachments mail)
-  (map (lambda (f) @~a{
-                  @(current-smtp-boundary)
-                  Content-Type: file --mime-type -b @(file-name-from-path f); name=@(file-name-from-path f);
-                  Content-Transfer-Encoding: base64
-                  Content-Disposition: attachment; filename=@(file-name-from-path f);
-
-                  @(base64-encode (port->string (open-input-file f)))
-                  })
-       (map (lambda (f) (expand-user-path f))
-            (mail-attachment-files mail))))
-
 (define (mail-header/attachment mail)
-  (string-join (mail-header/attachments mail) "\n"))
+  (define files (mail-attachment-files mail))
+  (if (and (list? files) (not (empty? files)))
+      (string-join (map (lambda (f)
+                          @~a{
+                              --@(current-smtp-boundary)
+                              Content-Type: file --mime-type -b @(file-name-from-path f); name=@(file-name-from-path f);
+                              Content-Transfer-Encoding: base64
+                              Content-Disposition: attachment; filename=@(file-name-from-path f);
+
+                              @(base64-encode (port->string (open-input-file f)))
+                              })
+                         (map (lambda (f) (expand-user-path f)) files))
+                   "\n")
+      ""))
 
 (define (mail-header mail)
   @~a{
@@ -103,7 +107,7 @@
 
       @(mail-header/attachment mail)
 
-      @(current-smtp-boundary)--
+      --@(current-smtp-boundary)--
       })
 
 
@@ -123,19 +127,20 @@
 
 
 (define (send-smtp-mail mail
-                        #:host host
-                        #:port [port 25]
-                        #:auth-user [auth-user #f]
-                        #:auth-passwd auth-passwd)
+                        #:host [host (current-smtp-host)]
+                        #:port [port (current-smtp-port)]
+                        #:username [username (current-smtp-username)]
+                        #:password [password (current-smtp-password)])
 
-  (or (mail-sender mail) (set-mail-sender! mail auth-user))
-  (define auth-user1 (if auth-user auth-user (mail-sender mail)))
-  (define auth-passwd1 auth-passwd)
+  (unless (mail-sender mail) (set-mail-sender! mail username))
+  (unless username (set! username (mail-sender mail)))
   (define sender (mail-sender mail))
   (define recipients (mail-recipients mail))
+  (define cc-recipients (mail-cc-recipients mail))
+  (define bcc-recipients (mail-bcc-recipients mail))
   (define headers (mail-header mail))
-  (define-values (r w) (tcp-connect host #;"smtp.qq.com"
-                                    port #;587))
+  (define-values (r w) (tcp-connect host
+                                    port))
 
   (and (check-rsp? r 220)
        (write-str w "EHLO localhost.localdomain")
@@ -143,9 +148,9 @@
 
        (write-str w "AUTH LOGIN")
        (check-rsp? r 334)
-       (write-str w (bytes->string/utf-8 (b64en auth-user1)))
+       (write-str w (b64en username))
        (check-rsp? r 334)
-       (write-str w (bytes->string/utf-8 (b64en auth-passwd1)))
+       (write-str w (b64en password))
        (check-rsp? r 235)
 
        (write-str w (format "MAIL FROM: <~a>" sender))
@@ -175,25 +180,32 @@
   ;; or with `raco test`. The code here does not run when this file is
   ;; required by another module.
 
+  (current-smtp-host "smtp.qq.com")
+  (current-smtp-port 587)
+  (current-smtp-username "")
+  (current-smtp-password "")
   (current-smtp-boundary "----=Part_abc_abc")
 
-  (define mail-a (mail #f
-                       '("recipient1@qq.com" "recipient2@qq.com") #f #f
-                       "subject" "content" #f))
+  (define mail-a
+    (mail #f
+          '("recipient1@qq.com" "recipient2@qq.com") #f #f
+          "subject" "content" #f))
+  (define mail-b
+    (mail "sender1@qq.com"
+          '("recipient1@qq.com" "recipient2@qq.com") '("recipient3@qq.com" "recipient4@qq.com") '("recipient5@qq.com" "recipient6@qq.com")
+          "subject" "content" #f))
 
-  (define mail-b (mail "sender1@qq.com"
-                       '("recipient1@qq.com" "recipient2@qq.com") '("recipient3@qq.com" "recipient4@qq.com") '("recipient5@qq.com" "recipient6@qq.com")
-                       "subject" "content" #f))
+  #;(check-regexp-match
+     @~a{
+         From:
+         To:
+         Subject: =\?UTF-8\?B\?c3ViamVjdA==\?=
+         MIME-Version: 1.0
+         Content-type: multipart/alternative; boundary=.*
+         Date: .*
+         .*}
+     (mail-header mail-b))
 
-  (check-regexp-match
-   @~a{
-       From: =\?UTF-8\?B\?c2VuZGVyMUBxcS5jb20=\?=
-       To: =\?UTF-8\?B\?cmVjaXBpZW50MUBxcS5jb20sIHJlY2lwaWVudDJAcXEuY29t\?=
-       Subject: =\?UTF-8\?B\?c3ViamVjdA==\?=
-       MIME-Version: 1.0
-       Content-type: multipart/alternative; boundary=.*
-       Date: .*}
-   (mail-header/info mail-b))
-
+  #;(send-smtp-mail mail-c)
 
   )
