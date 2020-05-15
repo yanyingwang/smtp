@@ -9,50 +9,71 @@
          racket/string
          racket/port
          racket/path
-         gregor)
+         gregor
+         uuid)
 
 (provide mail
-         mail-from
-         mail-tos
+         mail-sender
+         mail-recipients
+         mail-cc-recipients
+         mail-bcc-recipients
          mail-subject
          mail-content
          mail-attachment-files
-         mail-attachment-files/expanded
          mail-header
          mail-header/info
          mail-header/content
          mail-header/attachment
          mail-header/attachments
          send-smtp-mail
-         set-mail-from!)
+         set-mail-sender!
+         current-smtp-host
+         current-smtp-user
+         current-smtp-password
+         current-smtp-boundary)
+
+
+(define current-smtp-host (make-parameter ""))
+(define current-smtp-user (make-parameter ""))
+(define current-smtp-password (make-parameter ""))
+(define current-smtp-boundary (make-parameter @~a{------=_Part_@(uuid-string)}))
+
+(define (b64en str)
+  (bytes->string/utf-8 (base64-encode (string->bytes/utf-8 str))))
+(define (b64en-trim str)
+  (string-trim (b64en str)))
 
 
 ;;;;;;;;;;;; make mail
 (struct mail
-  ([from #:mutable] tos subject content attachment-files)
-  #:guard (lambda (from tos subject content attachment-files name)
-            (for-each (lambda (f) (unless (file-exists? (expand-user-path f))
-                               (error @~a{file not exists @f})))
-                      attachment-files)
-            (values from tos subject content attachment-files)))
-
-(define (mail-attachment-files/expanded mail)
-  (map (lambda (f) (expand-user-path f))
-       (mail-attachment-files mail)))
+  ([sender #:mutable]
+   recipients cc-recipients bcc-recipients
+   subject content attachment-files)
+  #:guard
+  (lambda (sender
+      recipients cc-recipients bcc-recipients
+      subject content attachment-files name)
+    (and attachment-files
+         (for-each (lambda (f) (unless (file-exists? (expand-user-path f))
+                            (error @~a{file not exists @f})))
+                   attachment-files))
+    (values sender
+            recipients cc-recipients bcc-recipients
+            subject content attachment-files)))
 
 (define (mail-header/info mail)
   @~a{
-      From: @(mail-from mail)
-      To: @(string-join (mail-tos mail) ", ")
-      Date: @(now/moment)
-      Subject: @(mail-subject mail)
+      From: =?UTF-8?B?@(b64en-trim (mail-sender mail))?=
+      To: =?UTF-8?B?@(b64en-trim (string-join (mail-recipients mail) ", "))?=
+      Subject: =?UTF-8?B?@(b64en-trim (mail-subject mail))?=
       MIME-Version: 1.0
-      Content-type: multipart/mixed; boundary=000TheBoundary000
+      Content-type: multipart/alternative; boundary=@(current-smtp-boundary)
+      Date: @(~t (now/moment) "E, d MMM yyyy HH:mm:ss Z")
       })
 
 (define (mail-header/content mail)
   @~a{
-      --000TheBoundary000
+      @(current-smtp-boundary)
       Content-Type: text/plain; charset=UTF-8; format=flowed
       Content-Disposition: inline
 
@@ -61,14 +82,15 @@
 
 (define (mail-header/attachments mail)
   (map (lambda (f) @~a{
-                  --000TheBoundary000
+                  @(current-smtp-boundary)
                   Content-Type: file --mime-type -b @(file-name-from-path f); name=@(file-name-from-path f);
                   Content-Transfer-Encoding: base64
                   Content-Disposition: attachment; filename=@(file-name-from-path f);
 
                   @(base64-encode (port->string (open-input-file f)))
                   })
-       (mail-attachment-files/expanded mail)))
+       (map (lambda (f) (expand-user-path f))
+            (mail-attachment-files mail))))
 
 (define (mail-header/attachment mail)
   (string-join (mail-header/attachments mail) "\n"))
@@ -80,6 +102,8 @@
       @(mail-header/content mail)
 
       @(mail-header/attachment mail)
+
+      @(current-smtp-boundary)--
       })
 
 
@@ -104,11 +128,11 @@
                         #:auth-user [auth-user #f]
                         #:auth-passwd auth-passwd)
 
-  (or (mail-from mail) (set-mail-from! mail auth-user))
-  (define auth-user1 (if auth-user auth-user (mail-from mail)))
+  (or (mail-sender mail) (set-mail-sender! mail auth-user))
+  (define auth-user1 (if auth-user auth-user (mail-sender mail)))
   (define auth-passwd1 auth-passwd)
-  (define sender (mail-from mail))
-  (define recipients (mail-tos mail))
+  (define sender (mail-sender mail))
+  (define recipients (mail-recipients mail))
   (define headers (mail-header mail))
   (define-values (r w) (tcp-connect host #;"smtp.qq.com"
                                     port #;587))
@@ -119,9 +143,9 @@
 
        (write-str w "AUTH LOGIN")
        (check-rsp? r 334)
-       (write-str w (bytes->string/utf-8 (base64-encode (string->bytes/utf-8  auth-user1))))
+       (write-str w (bytes->string/utf-8 (b64en auth-user1)))
        (check-rsp? r 334)
-       (write-str w (bytes->string/utf-8 (base64-encode (string->bytes/utf-8 auth-passwd1))))
+       (write-str w (bytes->string/utf-8 (b64en auth-passwd1)))
        (check-rsp? r 235)
 
        (write-str w (format "MAIL FROM: <~a>" sender))
@@ -151,4 +175,25 @@
   ;; or with `raco test`. The code here does not run when this file is
   ;; required by another module.
 
-  (check-equal? (+ 2 2) 4))
+  (current-smtp-boundary "----=Part_abc_abc")
+
+  (mail #f
+        '("recipient1@qq.com" "recipient2@qq.com") #f #f
+        "subject" "content" #f)
+
+  (define a-mail (mail "sender1@qq.com"
+                       '("recipient1@qq.com" "recipient2@qq.com") '("recipient3@qq.com" "recipient4@qq.com") '("recipient5@qq.com" "recipient6@qq.com")
+                       "subject" "content" #f))
+
+  (check-regexp-match
+   @~a{
+       From: =\?UTF-8\?B\?c2VuZGVyMUBxcS5jb20=\?=
+       To: =\?UTF-8\?B\?cmVjaXBpZW50MUBxcS5jb20sIHJlY2lwaWVudDJAcXEuY29t\?=
+       Subject: =\?UTF-8\?B\?c3ViamVjdA==\?=
+       MIME-Version: 1.0
+       Content-type: multipart/alternative; boundary=.*
+       Date: .*}
+   (mail-header/info a-mail))
+
+
+  )

@@ -64,9 +64,10 @@ commit the @italic{email} sending action.
 @section{Example}
 
 @codeblock[#:keep-lang-line? #f]|{
-(require smtp-lib)
+(require smtp)
 
-(define email (mail "my-email-name@qq.com" ; sender's email
+(define email
+        (mail "my-email-name@qq.com" ; sender's email
                     '("user1@qq.com", "user2@qq.com") ; recipient's emails
                     "email subject"
                     "email content"
