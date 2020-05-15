@@ -177,11 +177,11 @@
 
   (current-smtp-boundary "----=Part_abc_abc")
 
-  (mail #f
-        '("recipient1@qq.com" "recipient2@qq.com") #f #f
-        "subject" "content" #f)
+  (define mail-a (mail #f
+                       '("recipient1@qq.com" "recipient2@qq.com") #f #f
+                       "subject" "content" #f))
 
-  (define a-mail (mail "sender1@qq.com"
+  (define mail-b (mail "sender1@qq.com"
                        '("recipient1@qq.com" "recipient2@qq.com") '("recipient3@qq.com" "recipient4@qq.com") '("recipient5@qq.com" "recipient6@qq.com")
                        "subject" "content" #f))
 
@@ -193,7 +193,7 @@
        MIME-Version: 1.0
        Content-type: multipart/alternative; boundary=.*
        Date: .*}
-   (mail-header/info a-mail))
+   (mail-header/info mail-b))
 
 
   )
