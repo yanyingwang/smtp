@@ -3,6 +3,6 @@
 (define deps '("base" "gregor-lib" "at-exp-lib" "r6rs-lib" "uuid"))
 (define build-deps '("scribble-lib" "racket-doc" "rackunit-lib"))
 (define scribblings '(("scribblings/smtp.scrbl" ())))
-(define pkg-desc "A practical library for sending emails with SMTP protocol.")
+(define pkg-desc "A practical library to send emails using SMTP protocol.")
 (define version "0.1")
 (define pkg-authors '("Yanying Wang"))
