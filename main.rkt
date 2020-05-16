@@ -29,23 +29,28 @@
 
          send-smtp-mail
          set-mail-sender!
+         current-smtp-debug-mode
          current-smtp-host
          current-smtp-port
          current-smtp-username
          current-smtp-password
-         current-smtp-boundary)
+         )
 
 
-(define current-smtp-host (make-parameter #f))
+
+(define current-smtp-debug-mode (make-parameter #f))
+(define current-smtp-host (make-parameter ""))
 (define current-smtp-port (make-parameter 25))
-(define current-smtp-username (make-parameter #f))
-(define current-smtp-password (make-parameter #f))
-(define current-smtp-boundary (make-parameter @~a{----=_Part_@(uuid-string)}))
+(define current-smtp-username (make-parameter ""))
+(define current-smtp-password (make-parameter ""))
+
 
 (define (b64en str)
   (bytes->string/utf-8 (base64-encode (string->bytes/utf-8 str))))
 (define (b64en-trim str)
   (string-trim (b64en str)))
+(define boundary
+  @~a{----=_Part_@(uuid-string)})
 
 
 ;;;;;;;;;;;; make mail
@@ -82,13 +87,13 @@
       To: @(string-join (mail-recipients mail) ", ")
       Subject: =?UTF-8?B?@(b64en-trim (mail-subject mail))?=
       MIME-Version: 1.0
-      Content-type: multipart/alternative; boundary=@(current-smtp-boundary)
+      Content-type: multipart/alternative; boundary=@boundary
       Date: @(~t (now/moment) "E, d MMM yyyy HH:mm:ss Z")
       })
 
 (define (mail-header/message-body mail)
   @~a{
-      --@(current-smtp-boundary)
+      --@boundary
       Content-Type: text/plain; charset=UTF-8; format=flowed
       Content-Disposition: inline
 
@@ -100,7 +105,7 @@
   (if (and (list? files) (not (empty? files)))
       (string-join (map (lambda (f)
                           @~a{
-                              --@(current-smtp-boundary)
+                              --@boundary
                               Content-Type: file --mime-type -b @(file-name-from-path f); name=@(file-name-from-path f);
                               Content-Transfer-Encoding: base64
                               Content-Disposition: attachment; filename=@(file-name-from-path f);
@@ -119,23 +124,25 @@
 
       @(mail-header/attachment mail)
 
-      --@(current-smtp-boundary)--
+      --@|boundary|--
       })
 
 
 ;;;;;;;;;;;; send mail
 (define (check-rsp? port code)
   (let ([rsp (utf8->string (get-bytevector-some port))])
-    ;; (displayln (format "=== ~a" rsp)) #;debug
-    (string-prefix? rsp (number->string code))))
+    (when (current-smtp-debug-mode)
+      (displayln (format "==> ~a" rsp)))
+    (unless (string-prefix? rsp (number->string code))
+      (error  @~a{smtp server @(current-smtp-host): @rsp}))))
 
 (define (write-str port str)
   (fprintf port (if (string-suffix? str "\r\n")
                     str
                     (string-append str "\r\n")))
   (flush-output port)
-  ;; (displayln (format "===> ~a" str)) #;debug
-  )
+  (when (current-smtp-debug-mode)
+    (displayln (format "==< ~a" str))))
 
 
 (define (send-smtp-mail mail
@@ -151,36 +158,38 @@
   (define cc-recipients (mail-cc-recipients mail))
   (define bcc-recipients (mail-bcc-recipients mail))
   (define headers (mail-header mail))
-  (define-values (r w) (tcp-connect host
-                                    port))
 
-  (and (check-rsp? r 220)
-       (write-str w "EHLO localhost.localdomain")
-       (check-rsp? r 250)
+  (when (current-smtp-debug-mode)
+    (displayln @~a{starting to connect @|host|:@|port|......}))
+  (define-values (r w) (tcp-connect host port))
 
-       (write-str w "AUTH LOGIN")
-       (check-rsp? r 334)
-       (write-str w (b64en username))
-       (check-rsp? r 334)
-       (write-str w (b64en password))
-       (check-rsp? r 235)
+  (check-rsp? r 220)
+  (write-str w "EHLO localhost.localdomain")
+  (check-rsp? r 250)
 
-       (write-str w (format "MAIL FROM: <~a>" sender))
-       (check-rsp? r 250)
-       (for-each (lambda (i)
-                   (and (write-str w (format "RCPT TO: <~a>" i))
-                        (check-rsp? r 250)))
-                 recipients)
+  (write-str w "AUTH LOGIN")
+  (check-rsp? r 334)
+  (write-str w (b64en username))
+  (check-rsp? r 334)
+  (write-str w (b64en password))
+  (check-rsp? r 235)
 
-       (write-str w "DATA")
-       (check-rsp? r 354)
-       (write-str w headers)
+  (write-str w (format "MAIL FROM: <~a>" sender))
+  (check-rsp? r 250)
+  (for-each (lambda (i)
+              (and (write-str w (format "RCPT TO: <~a>" i))
+                   (check-rsp? r 250)))
+            recipients)
 
-       (write-str w ".")
-       (check-rsp? r 250)
+  (write-str w "DATA")
+  (check-rsp? r 354)
+  (write-str w headers)
 
-       (write-str w "QUIT")
-       (check-rsp? r 221)))
+  (write-str w ".")
+  (check-rsp? r 250)
+
+  (write-str w "QUIT")
+  (check-rsp? r 221))
 
 
 
@@ -192,32 +201,36 @@
   ;; or with `raco test`. The code here does not run when this file is
   ;; required by another module.
 
+  (check-false (current-smtp-debug-mode))
+  (check-equal? (current-smtp-host) "")
+  (check-equal? (current-smtp-port) 25)
+  (check-equal? (current-smtp-username) "")
+  (check-equal? (current-smtp-password) "")
   (current-smtp-host "smtp.qq.com")
   (current-smtp-port 587)
-  (current-smtp-username "")
-  (current-smtp-password "")
-  (current-smtp-boundary "----=Part_abc_abc")
+  (check-equal? (current-smtp-host) "smtp.qq.com")
+  (check-equal? (current-smtp-port) 587)
 
-  (define mail-a
-    (mail #f
-          '("recipient1@qq.com" "recipient2@qq.com") #f #f
-          "subject" "message-body" #f))
-  (define mail-b
-    (mail "sender1@qq.com"
-          '("recipient1@qq.com" "recipient2@qq.com") '("recipient3@qq.com" "recipient4@qq.com") '("recipient5@qq.com" "recipient6@qq.com")
-          "subject" "message-body" #f))
+  (define a-mail
+    (make-mail "rackunit test email" @~a{
+                                         ....message-body....
+                                         ....message-body....
+                                         ....message-body....
+                                         ....message-body....
+                                         }
+               #:from "sender1@qq.com"
+               #:to '("recipient1@qq.com")))
 
-  #;(check-regexp-match
-     @~a{
-         From:
-         To:
-         Subject: =\?UTF-8\?B\?c3ViamVjdA==\?=
-         MIME-Version: 1.0
-         Content-type: multipart/alternative; boundary=.*
-         Date: .*
-         .*}
-     (mail-header mail-b))
-
-  #;(send-smtp-mail mail-c)
+  (check-regexp-match
+   @~a|{
+        From: sender1@qq.com
+        To: recipient1@qq.com
+        Subject: =\?UTF-8\?B\?cmFja3VuaXQgdGVzdCBlbWFpbA==\?=
+        MIME-Version: 1.0
+        Content-type: multipart/alternative; boundary=.*
+        Date: .*
+        .*
+        }|
+   (mail-header a-mail))
 
   )
