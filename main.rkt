@@ -13,16 +13,17 @@
          uuid)
 
 (provide mail
+         make-mail
          mail-sender
          mail-recipients
          mail-cc-recipients
          mail-bcc-recipients
          mail-subject
-         mail-content
-         mail-attachment-files
+         mail-message-body
+         mail-attached-files
 
          mail-header/info
-         mail-header/content
+         mail-header/message-body
          mail-header/attachment
          mail-header
 
@@ -51,18 +52,29 @@
 (struct mail
   ([sender #:mutable]
    recipients cc-recipients bcc-recipients
-   subject content attachment-files)
+   subject message-body attached-files)
   #:guard
   (lambda (sender
       recipients cc-recipients bcc-recipients
-      subject content attachment-files name)
-    (and attachment-files
+      subject message-body attached-files name)
+    (and attached-files
          (for-each (lambda (f) (unless (file-exists? (expand-user-path f))
                             (error @~a{file not exists @f})))
-                   attachment-files))
+                   attached-files))
     (values sender
             recipients cc-recipients bcc-recipients
-            subject content attachment-files)))
+            subject message-body attached-files)))
+
+(define (make-mail subject message-body
+                   #:from [sender (current-smtp-username)]
+                   #:to [recipients '()]
+                   #:cc [cc-recipients '()]
+                   #:bcc [bcc-recipients '()]
+                   #:attached-files [attached-files '()])
+  (mail sender
+        recipients cc-recipients bcc-recipients
+        subject message-body attached-files))
+
 
 (define (mail-header/info mail)
   @~a{
@@ -74,17 +86,17 @@
       Date: @(~t (now/moment) "E, d MMM yyyy HH:mm:ss Z")
       })
 
-(define (mail-header/content mail)
+(define (mail-header/message-body mail)
   @~a{
       --@(current-smtp-boundary)
       Content-Type: text/plain; charset=UTF-8; format=flowed
       Content-Disposition: inline
 
-      @(mail-content mail)
+      @(mail-message-body mail)
       })
 
 (define (mail-header/attachment mail)
-  (define files (mail-attachment-files mail))
+  (define files (mail-attached-files mail))
   (if (and (list? files) (not (empty? files)))
       (string-join (map (lambda (f)
                           @~a{
@@ -103,7 +115,7 @@
   @~a{
       @(mail-header/info mail)
 
-      @(mail-header/content mail)
+      @(mail-header/message-body mail)
 
       @(mail-header/attachment mail)
 
@@ -189,11 +201,11 @@
   (define mail-a
     (mail #f
           '("recipient1@qq.com" "recipient2@qq.com") #f #f
-          "subject" "content" #f))
+          "subject" "message-body" #f))
   (define mail-b
     (mail "sender1@qq.com"
           '("recipient1@qq.com" "recipient2@qq.com") '("recipient3@qq.com" "recipient4@qq.com") '("recipient5@qq.com" "recipient6@qq.com")
-          "subject" "content" #f))
+          "subject" "message-body" #f))
 
   #;(check-regexp-match
      @~a{

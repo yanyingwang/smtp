@@ -8,7 +8,7 @@
 
 @defmodule[smtp]
 
-send emails with SMTP protocol.
+A practical library for sending emails with SMTP protocol.
 
 @hyperlink["https://github.com/yanyingwang/smtp" "source code"]
 
@@ -79,3 +79,7 @@ commit the @italic{email} sending action.
                 #:auth-user "my-email-name"
                 #:auth-password "the-password")
 }|
+
+
+@section[Bug Report]
+Please go to @url[https://github.com/yanyingwang/smtp/issues]
