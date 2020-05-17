@@ -174,3 +174,9 @@ returns header of the @italic{email}.
 @section{Bug Report}
 
 Please go to @url{https://github.com/yanyingwang/smtp/issues}.
+
+
+@section{TODO}
+
+@itemlist[@item{cc bcc}
+          @item{message body type: html, plain-text ...}]
