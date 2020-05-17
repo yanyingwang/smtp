@@ -9,11 +9,11 @@
          racket/string
          racket/port
          racket/path
+         racket/contract
          gregor
          uuid)
 
 (provide mail
-         make-mail
          mail-sender
          mail-recipients
          mail-cc-recipients
@@ -21,6 +21,15 @@
          mail-subject
          mail-message-body
          mail-attached-files
+         (contract-out
+          [make-mail (->* (string? string?)
+                          (#:from string?
+                           #:to (listof string?)
+                           #:cc (listof string?)
+                           #:bcc (listof string?)
+                           #:attached-files (listof (or/c path? string?)))
+
+                          any)])
 
          mail-header/info
          mail-header/message-body
@@ -33,9 +42,7 @@
          current-smtp-host
          current-smtp-port
          current-smtp-username
-         current-smtp-password
-         )
-
+         current-smtp-password)
 
 
 (define current-smtp-debug-mode (make-parameter #f))
@@ -49,11 +56,41 @@
   (bytes->string/utf-8 (base64-encode (string->bytes/utf-8 str))))
 (define (b64en-trim str)
   (string-trim (b64en str)))
+
 (define boundary
   @~a{----=_Part_@(uuid-string)})
 
+(define (check-rsp? port code)
+  (let ([rsp (utf8->string (get-bytevector-some port))])
+    (when (current-smtp-debug-mode)
+      (displayln (format "==> ~a" rsp)))
+    (unless (string-prefix? rsp (number->string code))
+      (error  @~a{smtp server @(current-smtp-host):
+                       @rsp}))))
 
-;;;;;;;;;;;; make mail
+(define (write-str port str)
+  (fprintf port (if (string-suffix? str "\r\n")
+                    str
+                    (string-append str "\r\n")))
+  (flush-output port)
+  (when (current-smtp-debug-mode)
+    (displayln (format "==< ~a" str))))
+
+
+
+
+;;;;;;;;;;;; mail
+(define (make-mail subject message-body
+                   #:from [sender (current-smtp-username)]
+                   #:to [recipients '()]
+                   #:cc [cc-recipients '()]
+                   #:bcc [bcc-recipients '()]
+                   #:attached-files [attached-files '()])
+  ;; todo: if recipients = string, then convert it ot list, same do the cc bcc.
+  (mail sender
+        recipients cc-recipients bcc-recipients
+        subject message-body attached-files))
+
 (struct mail
   ([sender #:mutable]
    recipients cc-recipients bcc-recipients
@@ -69,17 +106,6 @@
     (values sender
             recipients cc-recipients bcc-recipients
             subject message-body attached-files)))
-
-(define (make-mail subject message-body
-                   #:from [sender (current-smtp-username)]
-                   #:to [recipients '()]
-                   #:cc [cc-recipients '()]
-                   #:bcc [bcc-recipients '()]
-                   #:attached-files [attached-files '()])
-  (mail sender
-        recipients cc-recipients bcc-recipients
-        subject message-body attached-files))
-
 
 (define (mail-header/info mail)
   @~a{
@@ -128,23 +154,7 @@
       })
 
 
-;;;;;;;;;;;; send mail
-(define (check-rsp? port code)
-  (let ([rsp (utf8->string (get-bytevector-some port))])
-    (when (current-smtp-debug-mode)
-      (displayln (format "==> ~a" rsp)))
-    (unless (string-prefix? rsp (number->string code))
-      (error  @~a{smtp server @(current-smtp-host): @rsp}))))
-
-(define (write-str port str)
-  (fprintf port (if (string-suffix? str "\r\n")
-                    str
-                    (string-append str "\r\n")))
-  (flush-output port)
-  (when (current-smtp-debug-mode)
-    (displayln (format "==< ~a" str))))
-
-
+;;;;;;;;;;;; smtp
 (define (send-smtp-mail mail
                         #:host [host (current-smtp-host)]
                         #:port [port (current-smtp-port)]
@@ -193,6 +203,7 @@
 
 
 
+
 (module+ test
   (require rackunit))
 
@@ -212,12 +223,13 @@
   (check-equal? (current-smtp-port) 587)
 
   (define a-mail
-    (make-mail "rackunit test email" @~a{
-                                         ....message-body....
-                                         ....message-body....
-                                         ....message-body....
-                                         ....message-body....
-                                         }
+    (make-mail "rackunit test email"
+               @~a{
+                   ....message-body....
+                   ....message-body....
+                   ....message-body....
+                   ....message-body....
+                   }
                #:from "sender1@qq.com"
                #:to '("recipient1@qq.com")))
 

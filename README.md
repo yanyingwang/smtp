@@ -2,3 +2,6 @@
 
 send email using SMTP protocol in Racket-lang, check doc: https://docs.racket-lang.org/smtp/index.html
 
+
+    raco scribble --dest doc scribblings/smtp.scrbl
+
