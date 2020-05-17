@@ -70,7 +70,7 @@ A practical library to send emails using SMTP protocol, @hyperlink["https://gith
 
 @defparam[current-smtp-debug-mode v boolean?
           #:value #f]{
-show the smtp auth mode status or set to show or not show the smtp auth log.
+show status of the smtp auth debug mode or set to show or not show the smtp auth log.
 }
 
 @defparam[current-smtp-host v string?
