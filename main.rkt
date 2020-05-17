@@ -14,6 +14,7 @@
          uuid)
 
 (provide mail
+         mail?
          mail-sender
          mail-recipients
          mail-cc-recipients
@@ -102,7 +103,7 @@
       subject message-body attached-files name)
     (and attached-files
          (for-each (lambda (f) (unless (file-exists? (expand-user-path f))
-                            (error @~a{file not exists @f})))
+                            (error @~a{struct:mail: file not exists, @f})))
                    attached-files))
     (values sender
             recipients cc-recipients bcc-recipients

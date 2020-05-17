@@ -8,7 +8,7 @@
 
 @defmodule[smtp]
 
-A practical library to send emails with SMTP protocol, @hyperlink["https://github.com/yanyingwang/smtp" "Source Code"].
+A practical library to send emails using SMTP protocol, @hyperlink["https://github.com/yanyingwang/smtp" "Source Code"].
 
 @[table-of-contents]
 
@@ -102,8 +102,8 @@ set global smtp auth password.
                     [#:bcc bcc (listof string?) '()]
                     [#:attached-files attached-files (listof (or/c path? string?)) '()])
 
-                    (struct/c mail)]{
-make a mail struct instance.
+mail?]{
+make a @racket[mail] struct instance.
 }
 
 
@@ -128,39 +128,43 @@ commit the @italic{email} sending action.
   A structure type for smtp mails.
 }
 
-@defproc[(mail-sender [email (struct/c mail)]) string?]{
+@defproc[(mail? [email mail]) boolean?]{
+check if @italic{email} is an instance of struct @racket[mail] or not.
+}
+
+@defproc[(mail-sender [email mail?]) string?]{
 returns info about who the @italic{email} was sent from.
 }
 
-@defproc[(mail-recipients [email (struct/c mail)]) list?]{
+@defproc[(mail-recipients [email mail?]) list?]{
 returns info about who this @italic{email} was sent to.
 }
 
-@defproc[(mail-subject [email (struct/c mail)]) string?]{
+@defproc[(mail-subject [email mail?]) string?]{
 returns the @italic{email} subject.
 }
 
-@defproc[(mail-message-body [email (struct/c mail)]) string?]{
+@defproc[(mail-message-body [email mail?]) string?]{
 returns the @italic{email} content.
 }
 
-@defproc[(mail-attached-files [email (struct/c mail)]) list?]{
+@defproc[(mail-attached-files [email mail?]) list?]{
 returns a list of the @italic{email} attachment file paths.
 }
 
-@defproc[(mail-header/info [email (struct/c mail)]) string?]{
+@defproc[(mail-header/info [email mail?]) string?]{
 returns sender, recipients, subject infos of the @italic{email}.
 }
 
-@defproc[(mail-header/message-body [email (struct/c mail)]) string?]{
+@defproc[(mail-header/message-body [email mail?]) string?]{
 returns message body of the @italic{email}.
 }
 
-@defproc[(mail-header/attachment [email (struct/c mail)]) string?]{
+@defproc[(mail-header/attachment [email mail?]) string?]{
 returns encoded attachment content of the @italic{email}.
 }
 
-@defproc[(mail-header [email (struct/c mail)]) string?]{
+@defproc[(mail-header [email mail?]) string?]{
 returns header of the @italic{email}.
 }
 
