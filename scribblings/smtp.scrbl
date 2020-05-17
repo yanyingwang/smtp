@@ -60,7 +60,7 @@ A practical library to send emails using SMTP protocol, @hyperlink["https://gith
 ;; below code will do the samething as the previous code:
 (parameterize ([current-smtp-username "sender2"]
                [current-smtp-password "password2"])
-(send-smtp-mail c-mail))
+  (send-smtp-mail c-mail))
 
 }|
 
