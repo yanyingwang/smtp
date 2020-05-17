@@ -22,9 +22,10 @@
          mail-message-body
          mail-attached-files
          (contract-out
-          [make-mail (->* (string? string?)
+          [make-mail (->* (string?
+                           string?
+                           #:to (listof string?))
                           (#:from string?
-                           #:to (listof string?)
                            #:cc (listof string?)
                            #:bcc (listof string?)
                            #:attached-files (listof (or/c path? string?)))

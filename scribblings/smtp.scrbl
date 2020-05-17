@@ -8,7 +8,7 @@
 
 @defmodule[smtp]
 
-A practical library for sending emails with SMTP protocol, @hyperlink["https://github.com/yanyingwang/smtp" "Source Code"].
+A practical library to send emails with SMTP protocol, @hyperlink["https://github.com/yanyingwang/smtp" "Source Code"].
 
 @[table-of-contents]
 
