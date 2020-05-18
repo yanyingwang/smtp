@@ -113,6 +113,8 @@
   @~a{
       From: @(mail-sender mail)
       To: @(string-join (mail-recipients mail) ", ")
+      @(unless (empty? (mail-cc-recipients mail))
+         @~a{Cc: @(string-join (mail-cc-recipients mail) ", ")})
       Subject: =?UTF-8?B?@(b64en-trim (mail-subject mail))?=
       MIME-Version: 1.0
       Content-type: multipart/alternative; boundary=@boundary
@@ -192,6 +194,14 @@
               (and (write-str w (format "RCPT TO: <~a>" i))
                    (check-rsp? r 250)))
             recipients)
+  (for-each (lambda (i)
+              (and (write-str w (format "RCPT TO: <~a>" i))
+                   (check-rsp? r 250)))
+            cc-recipients)
+  (for-each (lambda (i)
+              (and (write-str w (format "RCPT TO: <~a>" i))
+                   (check-rsp? r 250)))
+            bcc-recipients)
 
   (write-str w "DATA")
   (check-rsp? r 354)
@@ -215,14 +225,23 @@
   ;; required by another module.
 
   (check-false (current-smtp-debug-mode))
+  ;; (current-smtp-debug-mode #t)
+  ;; (check-true (current-smtp-debug-mode))
+
   (check-equal? (current-smtp-host) "")
   (check-equal? (current-smtp-port) 25)
   (check-equal? (current-smtp-username) "")
   (check-equal? (current-smtp-password) "")
+
   (current-smtp-host "smtp.qq.com")
   (current-smtp-port 587)
+  (current-smtp-username "test1")
+  (current-smtp-password "test1password")
+
   (check-equal? (current-smtp-host) "smtp.qq.com")
   (check-equal? (current-smtp-port) 587)
+  (check-equal? (current-smtp-username) "test1")
+  (check-equal? (current-smtp-password) "test1password")
 
   (define a-mail
     (make-mail "rackunit test email"
@@ -233,18 +252,26 @@
                    ....message-body....
                    }
                #:from "sender1@qq.com"
-               #:to '("recipient1@qq.com")))
+               #:to '("recipient1@qq.com" "recipient2@qq.com")
+               #:cc '("recipient3@qq.com" "recipient4@qq.com")
+               #:bcc '("recipient5@qq.com")))
 
-  (check-regexp-match
-   @~a|{
-        From: sender1@qq.com
-        To: recipient1@qq.com
-        Subject: =\?UTF-8\?B\?cmFja3VuaXQgdGVzdCBlbWFpbA==\?=
-        MIME-Version: 1.0
-        Content-type: multipart/alternative; boundary=.*
-        Date: .*
-        .*
-        }|
-   (mail-header a-mail))
+
+  (check-regexp-match @~a|{
+                           From: sender1@qq.com
+                           To: recipient1@qq.com, recipient2@qq.com
+                           Cc: recipient3@qq.com, recipient4@qq.com
+                           Subject: =\?UTF-8\?B\?cmFja3VuaXQgdGVzdCBlbWFpbA==\?=
+                           MIME-Version: 1.0
+                           Content-type: multipart/alternative; boundary=.*
+                           Date: .*
+                           .*
+                           }|
+                      (mail-header a-mail))
+
+  (check-exn exn:fail?
+             (lambda ()
+               (send-smtp-mail a-mail)))
+
 
   )
