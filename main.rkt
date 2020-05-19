@@ -113,8 +113,7 @@
   @~a{
       From: @(mail-sender mail)
       To: @(string-join (mail-recipients mail) ", ")
-      @(unless (empty? (mail-cc-recipients mail))
-         @~a{Cc: @(string-join (mail-cc-recipients mail) ", ")})
+      @~a{Cc: @(string-join (mail-cc-recipients mail) ", ")}
       Subject: =?UTF-8?B?@(b64en-trim (mail-subject mail))?=
       MIME-Version: 1.0
       Content-type: multipart/alternative; boundary=@boundary
@@ -256,7 +255,6 @@
                #:cc '("recipient3@qq.com" "recipient4@qq.com")
                #:bcc '("recipient5@qq.com")))
 
-
   (check-regexp-match @~a|{
                            From: sender1@qq.com
                            To: recipient1@qq.com, recipient2@qq.com
@@ -268,6 +266,7 @@
                            .*
                            }|
                       (mail-header a-mail))
+
 
   (check-exn exn:fail?
              (lambda ()
