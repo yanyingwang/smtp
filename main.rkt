@@ -116,7 +116,7 @@
       @~a{Cc: @(string-join (mail-cc-recipients mail) ", ")}
       Subject: =?UTF-8?B?@(b64en-trim (mail-subject mail))?=
       MIME-Version: 1.0
-      Content-type: multipart/alternative; boundary=@boundary
+      Content-type: multipart/alternative; boundary="@boundary"
       Date: @(~t (now/moment) "E, d MMM yyyy HH:mm:ss Z")
       })
 
@@ -261,7 +261,7 @@
                            Cc: recipient3@qq.com, recipient4@qq.com
                            Subject: =\?UTF-8\?B\?cmFja3VuaXQgdGVzdCBlbWFpbA==\?=
                            MIME-Version: 1.0
-                           Content-type: multipart/alternative; boundary=.*
+                           Content-type: multipart/alternative; boundary=".*"
                            Date: .*
                            .*
                            }|
