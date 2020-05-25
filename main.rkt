@@ -110,7 +110,7 @@
             subject message-body attached-files))
   #:methods gen:custom-write
   [(define (write-proc mail port mode)
-     (displayln @~a{#<to: @(~a (string-join (mail-recipients mail) ", ") #:max-width 16 #:limit-marker "...") | subject: @(~a (mail-subject mail) #:max-width 16 #:limit-marker "...") | message-body: @(~a (mail-message-body mail) #:max-width 16 #:limit-marker "...") >}
+     (displayln @~a{#<to: @(~a (string-join (mail-recipients mail) ", ") #:max-width 16 #:limit-marker "...") | subject: @(~a (mail-subject mail) #:max-width 16 #:limit-marker "...") | message-body: @(~a (mail-message-body mail) #:max-width 16 #:limit-marker "...")>}
                 port))]
   )
 
