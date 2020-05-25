@@ -99,15 +99,20 @@
    subject message-body attached-files)
   #:guard
   (lambda (sender
-      recipients cc-recipients bcc-recipients
-      subject message-body attached-files name)
+           recipients cc-recipients bcc-recipients
+           subject message-body attached-files name)
     (and attached-files
-         (for-each (lambda (f) (unless (file-exists? (expand-user-path f))
-                            (error @~a{struct:mail: file not exists, @f})))
+         (for-each (lambda (f)
+                     (unless (file-exists? (expand-user-path f)) (error @~a{struct:mail: file not exists, @f})))
                    attached-files))
     (values sender
             recipients cc-recipients bcc-recipients
-            subject message-body attached-files)))
+            subject message-body attached-files))
+  #:methods gen:custom-write
+  [(define (write-proc mail port mode)
+     (displayln @~a{#<to: @(~a (string-join (mail-recipients mail) ", ") #:max-width 16 #:limit-marker "...") | subject: @(~a (mail-subject mail) #:max-width 16 #:limit-marker "...") | message-body: @(~a (mail-message-body mail) #:max-width 16 #:limit-marker "...") >}
+                port))]
+  )
 
 (define (mail-header/info mail)
   @~a{
@@ -245,10 +250,10 @@
   (define a-mail
     (make-mail "rackunit test email"
                @~a{
-                   ....message-body....
-                   ....message-body....
-                   ....message-body....
-                   ....message-body....
+                   message-body-line1
+                   message-body-line2
+                   message-body-line3
+                   message-body-line4
                    }
                #:from "sender1@qq.com"
                #:to '("recipient1@qq.com" "recipient2@qq.com")
