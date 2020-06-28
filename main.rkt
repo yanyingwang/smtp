@@ -52,6 +52,7 @@
 (define current-smtp-port (make-parameter 25))
 (define current-smtp-username (make-parameter ""))
 (define current-smtp-password (make-parameter ""))
+(define current-smtp-body-content-type (make-parameter "text/plain"))
 
 
 (define (b64en str)
@@ -110,8 +111,7 @@
             subject message-body attached-files))
   #:methods gen:custom-write
   [(define (write-proc mail port mode)
-     (display @~a{#<mail to: @(~a (string-join (mail-recipients mail) ", ") #:max-width 16 #:limit-marker "...") | subject: @(~a (mail-subject mail) #:max-width 16 #:limit-marker "...") | message-body: @(~a (mail-message-body mail) #:max-width 16 #:limit-marker "...")>}
-              port))]
+     (display @~a{#<mail to:@(~a (string-join (mail-recipients mail) ", ") #:max-width 16 #:limit-marker "...") subject:@(~a (mail-subject mail) #:max-width 16 #:limit-marker "...") message-body:@(~a (mail-message-body mail) #:max-width 16 #:limit-marker "...")>} port))]
   )
 
 (define (mail-header/info mail)
@@ -128,7 +128,7 @@
 (define (mail-header/message-body mail)
   @~a{
       --@boundary
-      Content-Type: text/plain; charset=UTF-8; format=flowed
+      Content-Type: @(current-smtp-body-content-type); charset=UTF-8; format=flowed
       Content-Disposition: inline
 
       @(mail-message-body mail)
@@ -171,6 +171,7 @@
 
   (unless (mail-sender mail) (set-mail-sender! mail username))
   (unless username (set! username (mail-sender mail)))
+  (unless (non-empty-string? username) (set! username (mail-sender mail)))
   (define sender (mail-sender mail))
   (define recipients (mail-recipients mail))
   (define cc-recipients (mail-cc-recipients mail))
@@ -276,6 +277,7 @@
   (check-exn exn:fail?
              (lambda ()
                (send-smtp-mail a-mail)))
+
 
 
   )
