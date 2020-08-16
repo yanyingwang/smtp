@@ -4,7 +4,3 @@ send emails using SMTP protocol in Racket-lang.
 
 check docs at: https://yanyingwang.github.io/smtp/ or https://docs.racket-lang.org/smtp/index.html
 
-
-
-    raco scribble --dest docs scribblings/smtp.scrbl
-
