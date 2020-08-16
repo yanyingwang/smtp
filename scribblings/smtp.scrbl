@@ -53,7 +53,7 @@ A practical library to send emails using SMTP protocol, @hyperlink["https://gith
 ;; below code will do the sending with a different specified auth:
 (send-smtp-mail c-mail
                 #:host "smtp.qq.com"
-                #:port "25"
+                #:port 25
                 #:username "sender2"
                 #:password "password2")
 
