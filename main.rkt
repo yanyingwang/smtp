@@ -61,7 +61,7 @@
   (string-trim (b64en str)))
 
 (define boundary
-  @~a{----=_Part_@(uuid-string)})
+  @~a{__=_Part_@(uuid-string)})
 
 (define (check-rsp? port code)
   (let ([rsp (utf8->string (get-bytevector-some port))])
@@ -260,6 +260,7 @@
                #:to '("recipient1@qq.com" "recipient2@qq.com")
                #:cc '("recipient3@qq.com" "recipient4@qq.com")
                #:bcc '("recipient5@qq.com")))
+
 
   (check-regexp-match @~a|{
                            From: sender1@qq.com
