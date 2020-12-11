@@ -17,8 +17,9 @@ A practical library to send emails using SMTP protocol, @hyperlink["https://gith
 
 @section{Example}
 
-@codeblock[#:keep-lang-line? #f]|{
 
+1. Sending email with authenticattion by parameters:
+@codeblock[#:keep-lang-line? #f]|{
 (current-smtp-host "smtp.qq.com")
 (current-smtp-port 587)
 (current-smtp-username "sender1")
@@ -46,22 +47,38 @@ A practical library to send emails using SMTP protocol, @hyperlink["https://gith
              #:from "sender2@qq.com"
              #:to '("recipient1@qq.com")))
 
-
 (send-smtp-mail a-mail)
 (send-smtp-mail b-mail)
+}
 
-;; below code will do the sending with a different specified auth:
+
+2. Sending and auth email with resetting some parameters dynamically:
+(parameterize ([current-smtp-username "sender2"]
+               [current-smtp-password "password2"])
+  (send-smtp-mail c-mail))
+
+
+3. Sending and auth email through function arguments:
+@codeblock[#:keep-lang-line? #f]|{
 (send-smtp-mail c-mail
                 #:host "smtp.qq.com"
                 #:port 25
                 #:username "sender2"
                 #:password "password2")
 
-;; below code will do the samething as the previous code:
-(parameterize ([current-smtp-username "sender2"]
-               [current-smtp-password "password2"])
-  (send-smtp-mail c-mail))
+4. Sending html message:
+(current-smtp-body-content-type "text/html")
+(define c-mail
+  (make-mail "a test of html email"
+             "<html><body> <h1>a test of html email</h1> <p>hello world!</p>"
+             #:from "sender2@qq.com"
+             #:to '("recipient1@qq.com")))
 
+(send-smtp-mail c-mail
+                #:host "smtp.qq.com"
+                #:port 25
+                #:username "sender2"
+                #:password "password2")
 }|
 
 
@@ -93,6 +110,11 @@ set global smtp auth username.
 set global smtp auth password.
 }
 
+@defparam[current-smtp-body-content-type v string?
+          #:value "text/plain"]{
+set smtp mail body's content type.
+}
+
 
 @defproc[(make-mail [subject string?]
                     [message-body string?]
@@ -100,7 +122,8 @@ set global smtp auth password.
                     [#:to to (listof string?)]
                     [#:cc cc (listof string?) '()]
                     [#:bcc bcc (listof string?) '()]
-                    [#:attached-files attached-files (listof (or/c path? string?)) '()])
+                    [#:attached-files attached-files (listof (or/c path? string?)) '()]
+                    [#:body-content-type body-content-type string? (current-smtp-body-content-type)])
 
 mail?]{
 make a @racket[mail] struct instance.
