@@ -49,7 +49,7 @@ A practical library to send emails using SMTP protocol, @hyperlink["https://gith
 
 (send-smtp-mail a-mail)
 (send-smtp-mail b-mail)
-}
+}|
 
 
 2. Sending and auth email with resetting some parameters dynamically:
