@@ -1,15 +1,11 @@
 #lang at-exp racket/base
 
-(require rnrs/io/ports-6
-         rnrs/bytevectors-6
-         racket/tcp
-         racket/list
+(require racket/tcp
          racket/format
          racket/string
-         racket/path
          racket/contract
-         gregor
-         (file "private/util.rkt")
+         (file "private/params.rkt")
+         (file "private/utils.rkt")
          (file "private/base.rkt"))
 
 
@@ -56,7 +52,7 @@
   ;; todo: if recipients = string, then convert it to list, same do the cc bcc.
   (mail sender
         recipients cc-recipients bcc-recipients
-        subject body attached-files))
+        subject body body-content-type attached-files))
 
 (define (send-smtp-mail mail
                         #:host [host (current-smtp-host)]

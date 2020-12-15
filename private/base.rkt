@@ -1,15 +1,16 @@
-#lang racket/base
+#lang at-exp racket/base
 
-(provide all-defined-out)
+(require gregor
+         net/base64
+         racket/format
+         racket/list
+         racket/path
+         racket/port
+         racket/string
+         (file "./utils.rkt"))
 
+(provide (all-defined-out))
 
-
-(define current-smtp-debug-mode (make-parameter #f))
-(define current-smtp-host (make-parameter ""))
-(define current-smtp-port (make-parameter 25))
-(define current-smtp-username (make-parameter ""))
-(define current-smtp-password (make-parameter ""))
-(define current-smtp-body-content-type (make-parameter "text/plain"))
 
 
 (struct mail
@@ -18,15 +19,15 @@
    subject body body-content-type attached-files)
   #:guard
   (lambda (sender
-           recipients cc-recipients bcc-recipients
-           subject body attached-files name)
+      recipients cc-recipients bcc-recipients
+      subject body body-content-type attached-files name)
     (and attached-files
          (for-each (lambda (f)
                      (unless (file-exists? (expand-user-path f)) (error @~a{struct:mail: file not exists, @f})))
                    attached-files))
     (values sender
             recipients cc-recipients bcc-recipients
-            subject body attached-files))
+            subject body body-content-type attached-files))
   #:methods gen:custom-write
   [(define (write-proc mail port mode)
      (display @~a{#<mail to:@(~a (string-join (mail-recipients mail) ", ") #:max-width 16 #:limit-marker "...") subject:@(~a (mail-subject mail) #:max-width 16 #:limit-marker "...") body:@(~a (mail-body mail) #:max-width 16 #:limit-marker "...")>} port))]

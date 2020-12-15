@@ -3,13 +3,14 @@
 (require rnrs/io/ports-6
          rnrs/bytevectors-6
          net/base64
-         racket/list
          racket/format
          racket/string
-         racket/port
-         uuid)
+         uuid
+         (file "./params.rkt"))
 
-(provide all-defined-out)
+(provide (all-defined-out))
+
+
 
 (define (b64en str)
   (bytes->string/utf-8 (base64-encode (string->bytes/utf-8 str))))
@@ -24,7 +25,7 @@
     (when (current-smtp-debug-mode)
       (displayln (format "==> ~a" rsp)))
     (unless (string-prefix? rsp (number->string code))
-      (error  @~a{smtp server @(current-smtp-host):
+      (error  @~a{smtp server
                        @rsp}))))
 
 (define (write-str port str)
