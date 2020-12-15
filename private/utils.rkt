@@ -25,7 +25,7 @@
     (when (current-smtp-debug-mode)
       (displayln (format "==> ~a" rsp)))
     (unless (string-prefix? rsp (number->string code))
-      (error  @~a{smtp server
+      (error  @~a{smtp server @(current-smtp-host):
                        @rsp}))))
 
 (define (write-str port str)

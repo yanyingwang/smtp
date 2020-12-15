@@ -6,7 +6,7 @@
          racket/contract
          (file "private/params.rkt")
          (file "private/utils.rkt")
-         (file "private/base.rkt"))
+         (file "private/core.rkt"))
 
 
 (provide mail
