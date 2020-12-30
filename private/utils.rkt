@@ -18,7 +18,7 @@
   (string-trim (b64en str)))
 
 (define boundary
-  @~a{__=_Part_@(uuid-string)})
+  @~a{----=_Part_@(uuid-string)})
 
 (define (check-rsp? port code)
   (let ([rsp (utf8->string (get-bytevector-some port))])
@@ -29,9 +29,10 @@
                        @rsp}))))
 
 (define (write-str port str)
-  (fprintf port (if (string-suffix? str "\r\n")
-                    str
-                    (string-append str "\r\n")))
+  (define newstr (string-append
+                  (string-replace (string-trim str) "\n" "\r\n")
+                  "\r\n"))
+  (fprintf port newstr)
   (flush-output port)
   (when (current-smtp-debug-mode)
     (displayln (format "==< ~a" str))))

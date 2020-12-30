@@ -8,9 +8,7 @@
          racket/port
          racket/string
          (file "./utils.rkt"))
-
 (provide (all-defined-out))
-
 
 
 (struct mail
@@ -32,17 +30,6 @@
   [(define (write-proc mail port mode)
      (display @~a{#<mail to:@(~a (string-join (mail-recipients mail) ", ") #:max-width 16 #:limit-marker "...") subject:@(~a (mail-subject mail) #:max-width 16 #:limit-marker "...") body:@(~a (mail-body mail) #:max-width 16 #:limit-marker "...")>} port))]
   )
-
-(define (mail-header mail)
-  @~a{
-      @(mail-header/info mail)
-
-      @(mail-header/body mail)
-
-      @(mail-header/attachment mail)
-
-      --@|boundary|--
-      })
 
 (define (mail-header/info mail)
   @~a{
@@ -66,7 +53,8 @@
 
 (define (mail-header/attachment mail)
   (define files (mail-attached-files mail))
-  (if (and (list? files) (not (empty? files)))
+  (if (and (list? files)
+           (not (empty? files)))
       (string-join (map (lambda (f)
                           @~a{
                               --@boundary
@@ -79,3 +67,19 @@
                          (map (lambda (f) (expand-user-path f)) files))
                    "\n")
       ""))
+
+
+
+(define (mail-header mail)
+  @~a{
+      @(mail-header/info mail)
+
+      @(mail-header/body mail)
+
+      @(mail-header/attachment mail)
+
+      --@|boundary|--
+      })
+
+(define (formated-mail-header mail)
+  (string-replace (mail-header mail) "\n" "\r\n"))
