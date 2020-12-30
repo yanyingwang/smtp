@@ -67,7 +67,7 @@
   (define recipients (mail-recipients mail))
   (define cc-recipients (mail-cc-recipients mail))
   (define bcc-recipients (mail-bcc-recipients mail))
-  (define headers (formated-mail-header mail))
+  (define headers (mail-header mail))
 
   (when (current-smtp-debug-mode)
     (displayln @~a{starting to connect @|host|:@|port|......}))

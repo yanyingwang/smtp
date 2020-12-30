@@ -80,6 +80,3 @@
 
       --@|boundary|--
       })
-
-(define (formated-mail-header mail)
-  (string-replace (mail-header mail) "\n" "\r\n"))
