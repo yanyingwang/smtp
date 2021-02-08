@@ -57,6 +57,7 @@
 (define (send-smtp-mail mail
                         #:host [host (current-smtp-host)]
                         #:port [port (current-smtp-port)]
+                        #:tls-encode [tls-encode #f]
                         #:username [username (current-smtp-username)]
                         #:password [password (current-smtp-password)])
 
@@ -76,6 +77,10 @@
   (check-rsp? r 220)
   (write-str w "EHLO localhost.localdomain")
   (check-rsp? r 250)
+
+  (when (eq? '#t tls-encode)   
+    (write-str w "STARTTLS AUTH LOGIN")
+    (check-rsp? r 555))
 
   (write-str w "AUTH LOGIN")
   (check-rsp? r 334)
