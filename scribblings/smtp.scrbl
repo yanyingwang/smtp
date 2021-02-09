@@ -5,21 +5,15 @@
 @title{smtp}
 @author[(author+email "Yanying Wang" "yanyingwang1@gmail.com")]
 
-
 @defmodule[smtp]
-
 A practical library to send emails using SMTP protocol, @hyperlink["https://github.com/yanyingwang/smtp" "Source Code"].
-
-@[table-of-contents]
-
+@table-of-contents[]
 
 
 
-@section{Example}
-
-
-1. Sending email with authenticattion by parameters:
-@codeblock[#:keep-lang-line? #f]|{
+@section{Guide}
+@subsection[#:tag "parameter-auth-example"]{Sending Emails authenticated by @secref["smtp-parameters"]:}
+@codeblock|{
 (current-smtp-host "smtp.qq.com")
 (current-smtp-port 587)
 (current-smtp-username "sender1")
@@ -49,32 +43,36 @@ A practical library to send emails using SMTP protocol, @hyperlink["https://gith
 
 (send-smtp-mail a-mail)
 (send-smtp-mail b-mail)
+(send-smtp-mail c-mail)
 }|
 
-
-2. Sending and auth email with resetting some parameters dynamically:
+@subsection{Sending authenticated Emails by dynamic binding some parameters:}
+@codeblock|{
 (parameterize ([current-smtp-username "sender2"]
                [current-smtp-password "password2"])
   (send-smtp-mail c-mail))
+}|
 
-
-3. Sending and auth email through function arguments:
-@codeblock[#:keep-lang-line? #f]|{
+@subsection[#:tag "functional-auth-example"]{Sending and authenticating Emails through function arguments:}
+@codeblock|{
 (send-smtp-mail c-mail
                 #:host "smtp.qq.com"
                 #:port 25
                 #:username "sender2"
                 #:password "password2")
+}|
 
-4. Sending html message:
+@subsection[#:tag "html-message-example"]{Sending html message:}
+@codeblock|{
 (current-smtp-body-content-type "text/html")
-(define c-mail
+(define d-mail
   (make-mail "a test of html email"
              "<html><body> <h1>a test of html email</h1> <p>hello world!</p>"
+             #:body-content-type "text/html" ;; use #:body-content-type here will overwrite default value from @racket[current-smtp-body-content-type].
              #:from "sender2@qq.com"
              #:to '("recipient1@qq.com")))
 
-(send-smtp-mail c-mail
+(send-smtp-mail d-mail
                 #:host "smtp.qq.com"
                 #:port 25
                 #:username "sender2"
@@ -84,38 +82,28 @@ A practical library to send emails using SMTP protocol, @hyperlink["https://gith
 
 
 @section{Reference}
+@subsection[#:tag "smtp-parameters"]{Parameters}
+@margin-note{Check basic info at Racket @secref["parameters" #:doc '(lib "scribblings/reference/reference.scrbl")].}
 
-@defparam[current-smtp-debug-mode v boolean?
-          #:value #f]{
-show status of the smtp auth debug mode or set to show or not show the smtp auth log.
+@deftogether[(
+@defparam[current-smtp-host v string? #:value ""]
+@defparam[current-smtp-port v integer? #:value 25]
+@defparam[current-smtp-username v string? #:value ""]
+@defparam[current-smtp-password v string? #:value ""]
+)]{
+set authentication to be used for sending Emails later, check usage example at @secref["parameter-auth-example"].
 }
 
-@defparam[current-smtp-host v string?
-          #:value ""]{
-set global smtp auth host.
+@defparam[current-smtp-body-content-type v string? #:value "text/plain"]{
+@racket[current-smtp-body-content-type] is used for set smtp mail body's content type, check usage example at @secref["html-message-example"].
 }
 
-@defparam[current-smtp-port v integer?
-          #:value 25]{
-set global smtp auth port number.
-}
-
-@defparam[current-smtp-username v string?
-          #:value ""]{
-set global smtp auth username.
-}
-
-@defparam[current-smtp-password v string?
-          #:value ""]{
-set global smtp auth password.
-}
-
-@defparam[current-smtp-body-content-type v string?
-          #:value "text/plain"]{
-set smtp mail body's content type.
+@defparam[current-smtp-debug-mode v boolean? #:value #f]{
+@racket[current-smtp-debug-mode] is used for show status of the smtp auth debug mode or set to show or not show the smtp auth log.
 }
 
 
+@subsection{Making and sending mails}
 @defproc[(make-mail [subject string?]
                     [message-body string?]
                     [#:from from string? (current-smtp-username)]
@@ -126,21 +114,22 @@ set smtp mail body's content type.
                     [#:body-content-type body-content-type string? (current-smtp-body-content-type)])
 
 mail?]{
-make a @racket[mail] struct instance.
+Make @racket[mail] struct instances, check usage example at @secref["parameter-auth-example"].
 }
-
 
 @defproc[(send-smtp-mail [email mail?]
                     [#:host host string? (current-smtp-host)]
                     [#:port port integer? (current-smtp-port)]
+                    [#:tls-encode tls-encode boolean? #f]
                     [#:user username string? (current-smtp-username)]
                     [#:password password string? (current-smtp-password)])
 
                     void?]{
-commit the @italic{email} sending action.
+Commit the @italic{email} sending action, check usage example at @secref["functional-auth-example"].
 }
 
 
+@subsection{Basis Structs}
 @defstruct*[mail ([sender string?]
                   [recipients list?]
                   [cc-recipients list?]
@@ -148,58 +137,54 @@ commit the @italic{email} sending action.
                   [subject string?]
                   [message-body string?]
                   [attached-files list?])]{
-  A structure type for smtp mails.
+  Structure of smtp mails.
 }
 
-@defproc[(mail? [email mail]) boolean?]{
-check if @italic{email} is an instance of struct @racket[mail] or not.
+@deftogether[(
+@defproc[(mail? [email mail]) boolean?]
+@defproc[(mail-sender [email mail?]) string?]
+@defproc[(mail-recipients [email mail?]) list?]
+@defproc[(mail-cc-recipients [email mail?]) list?]
+@defproc[(mail-bcc-recipients [email mail?]) list?]
+@defproc[(mail-subject [email mail?]) string?]
+@defproc[(mail-attached-files [email mail?]) list?]
+
+)]{
+@racket[mail?] check if @italic{email} is an instance of struct @racket[mail] or not.   @linebreak[]
+@racket[mail-sender] returns struct info about who the @italic{email} was @bold{sent from}.   @linebreak[]
+@racket[mail-recipients] returns struct info about who this @italic{email} was @bold{sent to}.   @linebreak[]
+@racket[mail-cc-recipients] returns struct info about who this @italic{email} was @bold{copied to}.   @linebreak[]
+@racket[mail-bcc-recipients] returns struct info about who this @italic{email} was @bold{carbon copied to}.    @linebreak[]
+@racket[mail-attached-files] returns struct info about @bold{a list of attachment file paths} of this @italic{email}.
 }
 
-@defproc[(mail-sender [email mail?]) string?]{
-returns info about who the @italic{email} was sent from.
-}
+@deftogether[(
+@defproc[(mail-header [email mail?]) string?]
+@defproc[(mail-header/info [email mail?]) string?]
+@defproc[(mail-header/body [email mail?]) string?]
+@defproc[(mail-header/attachment [email mail?]) string?]
+)]{
+@racket[mail-header] returns @italic{email} header which is used for sending.   @linebreak[]
+@racket[mail-header/info] returns sender, recipients, subject infos of the @racket[mail-header] of @italic{email}.   @linebreak[]
 
-@defproc[(mail-recipients [email mail?]) list?]{
-returns info about who this @italic{email} was sent to.
-}
-
-@defproc[(mail-subject [email mail?]) string?]{
-returns the @italic{email} subject.
-}
-
-@defproc[(mail-message-body [email mail?]) string?]{
-returns the @italic{email} content.
-}
-
-@defproc[(mail-attached-files [email mail?]) list?]{
-returns a list of the @italic{email} attachment file paths.
-}
-
-@defproc[(mail-header/info [email mail?]) string?]{
-returns sender, recipients, subject infos of the @italic{email}.
-}
-
-@defproc[(mail-header/message-body [email mail?]) string?]{
-returns message body of the @italic{email}.
-}
-
-@defproc[(mail-header/attachment [email mail?]) string?]{
-returns encoded attachment content of the @italic{email}.
-}
-
-@defproc[(mail-header [email mail?]) string?]{
-returns header of the @italic{email}.
 }
 
 
-
-
-@section{Bug Report}
-
-Please go to @url{https://github.com/yanyingwang/smtp/issues}.
+@section{Changelog}
+@itemlist[
+@item{support @hyperlink["https://github.com/yanyingwang/smtp/pull/1" "tls-encode(Transport Layer Security)"]  @smaller{---2021/02/09}}
+@item{support cc bcc @smaller{---2020/05}}
+]
 
 
 @section{TODO}
+@itemlist[@item{}
+          @item{}]
 
-@itemlist[@item{cc bcc}
-          @item{message body type: html, plain-text ...}]
+
+@section{Bug Report}
+Please go to @url{https://github.com/yanyingwang/smtp/issues}.
+
+
+
+@; @(index-section)

@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        racket-version: [ "7.7" ]
+        racket-version: [ "7.9" ]
         racket-variant: [ "regular" ]
     name: main
     steps:
@@ -24,7 +24,14 @@ jobs:
           raco pkg install --auto
       - name: build docs
         run: |
-          raco scribble --dest docs --dest-name index ++main-xref-in --redirect-main https://docs.racket-lang.org/ scribblings/smtp.scrbl
+          # raco scribble --dest docs --dest-name index ++main-xref-in --redirect-main https://docs.racket-lang.org/ --redirect https://docs.racket-lang.org/local-redirect/index.html scribblings/smtp.scrbl
+          raco scribble \
+          --htmls \
+          --dest-name docs \
+          ++main-xref-in \
+          --redirect-main https://docs.racket-lang.org/ \
+          --redirect https://docs.racket-lang.org/local-redirect/index.html \
+          scribblings/smtp.scrbl
       - name: Deploy to GitHub Pages
         if: success()
         uses: crazy-max/ghaction-github-pages@v1.2.5

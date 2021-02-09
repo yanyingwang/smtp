@@ -8,7 +8,6 @@
          (file "private/utils.rkt")
          (file "private/core.rkt"))
 
-
 (provide mail
          mail?
          mail-sender
@@ -39,7 +38,6 @@
          current-smtp-username
          current-smtp-password
          current-smtp-body-content-type)
-
 
 
 (define (make-mail subject body
@@ -78,7 +76,7 @@
   (write-str w "EHLO localhost.localdomain")
   (check-rsp? r 250)
 
-  (when (eq? '#t tls-encode)   
+  (when (eq? '#t tls-encode)
     (write-str w "STARTTLS AUTH LOGIN")
     (check-rsp? r 555))
 
@@ -113,7 +111,6 @@
 
   (write-str w "QUIT")
   (check-rsp? r 221))
-
 
 
 
@@ -174,6 +171,5 @@
   (check-exn exn:fail?
              (lambda ()
                (send-smtp-mail a-mail)))
-
 
   )
