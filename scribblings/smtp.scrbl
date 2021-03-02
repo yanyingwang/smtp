@@ -7,7 +7,7 @@
 @author[(author+email "Yanying Wang" "yanyingwang1@gmail.com")]
 
 @defmodule[smtp]
-A practical library to send emails using SMTP protocol, @hyperlink["https://github.com/yanyingwang/smtp" "Source Code"].
+A practical library to send emails using SMTP protocol.
 @table-of-contents[]
 
 
@@ -45,7 +45,7 @@ A practical library to send emails using SMTP protocol, @hyperlink["https://gith
 > (send-smtp-mail c-mail)
 }|
 
-@subsection{Sending authenticated Emails by dynamic binding some parameters:}
+@subsection{Sending authenticated Emails by dynamically binding some parameters:}
 @codeblock|{
 > (parameterize ([current-smtp-username "sender2"]
                  [current-smtp-password "password2"])
@@ -169,21 +169,19 @@ Commit the @italic{email} sending action, check usage example at @secref["functi
 }
 
 
-@section{Changelog}
+@section{Others}
+@subsection{Changelog}
 @itemlist[
 @item{support @hyperlink["https://github.com/yanyingwang/smtp/pull/1" "tls-encode(Transport Layer Security)"]  @smaller{---2021/02/09}}
 @item{support cc bcc @smaller{---2020/05}}
 ]
 
-
-@section{TODO}
+@subsection{TODO}
 @itemlist[@item{}
           @item{}]
 
-
-@section{Bug Report}
+@subsection{Bug Report}
 Please go to @url{https://github.com/yanyingwang/smtp/issues}.
-
 
 
 @; @(index-section)
