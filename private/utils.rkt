@@ -6,10 +6,8 @@
          racket/format
          racket/string
          uuid
-         (file "./params.rkt"))
-
+         (file "params.rkt"))
 (provide (all-defined-out))
-
 
 
 (define (b64en str)

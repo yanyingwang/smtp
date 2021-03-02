@@ -8,15 +8,8 @@
          (file "private/utils.rkt")
          (file "private/core.rkt"))
 
-(provide mail
-         mail?
-         mail-sender
-         mail-recipients
-         mail-cc-recipients
-         mail-bcc-recipients
-         mail-subject
-         mail-body
-         mail-attached-files
+(provide (all-from-out (file "private/params.rkt")
+                       (file "private/core.rkt"))
          (contract-out
           [make-mail (->* (string?
                            string?
@@ -26,18 +19,7 @@
                            #:bcc (listof string?)
                            #:attached-files (listof (or/c path? string?)))
                           any)])
-         mail-header/info
-         mail-header/body
-         mail-header/attachment
-         mail-header
-         send-smtp-mail
-         set-mail-sender!
-         current-smtp-debug-mode
-         current-smtp-host
-         current-smtp-port
-         current-smtp-username
-         current-smtp-password
-         current-smtp-body-content-type)
+         send-smtp-mail)
 
 
 (define (make-mail subject body

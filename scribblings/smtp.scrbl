@@ -1,6 +1,7 @@
 #lang scribble/manual
 @require[@for-label[smtp
-                    racket/base]]
+                     (except-in racket/base >)
+                    ]]
 
 @title{smtp}
 @author[(author+email "Yanying Wang" "yanyingwang1@gmail.com")]
@@ -10,73 +11,71 @@ A practical library to send emails using SMTP protocol, @hyperlink["https://gith
 @table-of-contents[]
 
 
-
 @section{Guide}
 @subsection[#:tag "parameter-auth-example"]{Sending Emails authenticated by @secref["smtp-parameters"]:}
 @codeblock|{
-(current-smtp-host "smtp.qq.com")
-(current-smtp-port 587)
-(current-smtp-username "sender1")
-(current-smtp-password "password1")
-(current-smtp-debug-mode #t)
+> (current-smtp-host "smtp.qq.com")
+> (current-smtp-port 587)
+> (current-smtp-username "sender1")
+> (current-smtp-password "password1")
+> (current-smtp-debug-mode #t)
+> (define a-mail
+    (make-mail "a test email"
+               "this is the message body of the test mail"
+               #:from "sender1@qq.com"
+               #:to '("recipient1@qq.com")
+               #:cc '("recipient2@qq.com")
+               #:bcc '("recipient3@qq.com" "recipient4@qq.com")
+               #:attached-files '("~/abc.txt")))
 
-(define a-mail
-  (make-mail "a test email"
-             "this is the message body of the test mail"
-             #:from "sender1@qq.com"
-             #:to '("recipient1@qq.com")
-             #:cc '("recipient2@qq.com")
-             #:bcc '("recipient3@qq.com" "recipient4@qq.com")
-             #:attached-files '("~/abc.txt")))
+> (define b-mail
+    (make-mail "a test1 email"
+               "this is the message body of the test1 mail"
+               #:from "sender1@qq.com"
+               #:to '("recipient1@qq.com")))
 
-(define b-mail
-  (make-mail "a test1 email"
-             "this is the message body of the test1 mail"
-             #:from "sender1@qq.com"
-             #:to '("recipient1@qq.com")))
+> (define c-mail
+    (make-mail "a test2 email"
+               "this is the message body of the test2 mail"
+               #:from "sender2@qq.com"
+               #:to '("recipient1@qq.com")))
 
-(define c-mail
-  (make-mail "a test2 email"
-             "this is the message body of the test2 mail"
-             #:from "sender2@qq.com"
-             #:to '("recipient1@qq.com")))
-
-(send-smtp-mail a-mail)
-(send-smtp-mail b-mail)
-(send-smtp-mail c-mail)
+> (send-smtp-mail a-mail)
+> (send-smtp-mail b-mail)
+> (send-smtp-mail c-mail)
 }|
 
 @subsection{Sending authenticated Emails by dynamic binding some parameters:}
 @codeblock|{
-(parameterize ([current-smtp-username "sender2"]
-               [current-smtp-password "password2"])
-  (send-smtp-mail c-mail))
+> (parameterize ([current-smtp-username "sender2"]
+                 [current-smtp-password "password2"])
+    (send-smtp-mail c-mail))
 }|
 
 @subsection[#:tag "functional-auth-example"]{Sending and authenticating Emails through function arguments:}
 @codeblock|{
-(send-smtp-mail c-mail
-                #:host "smtp.qq.com"
-                #:port 25
-                #:username "sender2"
-                #:password "password2")
+> (send-smtp-mail c-mail
+                  #:host "smtp.qq.com"
+                  #:port 25
+                  #:username "sender2"
+                  #:password "password2")
 }|
 
 @subsection[#:tag "html-message-example"]{Sending html message:}
 @codeblock|{
-(current-smtp-body-content-type "text/html")
-(define d-mail
-  (make-mail "a test of html email"
-             "<html><body> <h1>a test of html email</h1> <p>hello world!</p>"
-             #:body-content-type "text/html" ;; use #:body-content-type here will overwrite default value from @racket[current-smtp-body-content-type].
-             #:from "sender2@qq.com"
-             #:to '("recipient1@qq.com")))
+> (current-smtp-body-content-type "text/html")
+> (define d-mail
+    (make-mail "a test of html email"
+               "<html><body> <h1>a test of html email</h1> <p>hello world!</p>"
+               #:body-content-type "text/html" ;; use #:body-content-type here will overwrite default value from @racket[current-smtp-body-content-type].
+               #:from "sender2@qq.com"
+               #:to '("recipient1@qq.com")))
 
-(send-smtp-mail d-mail
-                #:host "smtp.qq.com"
-                #:port 25
-                #:username "sender2"
-                #:password "password2")
+> (send-smtp-mail d-mail
+                  #:host "smtp.qq.com"
+                  #:port 25
+                  #:username "sender2"
+                  #:password "password2")
 }|
 
 
