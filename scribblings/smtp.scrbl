@@ -170,15 +170,15 @@ Commit the @italic{email} sending action, check usage example at @secref["functi
 
 
 @section{Others}
-@subsection{Changelog}
-@itemlist[
-@item{support @hyperlink["https://github.com/yanyingwang/smtp/pull/1" "tls-encode(Transport Layer Security)"]  @smaller{---2021/02/09}}
-@item{support cc bcc @smaller{---2020/05}}
-]
-
-@subsection{TODO}
+@subsection{TODOs}
 @itemlist[@item{}
           @item{}]
+
+@subsection{Changelogs}
+@itemlist[
+@item{support @link["https://github.com/yanyingwang/smtp/pull/1" "tls-encode(Transport Layer Security)"]  @smaller{---2021/02/09}}
+@item{support cc bcc @smaller{---2020/05}}
+]
 
 @subsection{Bug Report}
 Please go to @url{https://github.com/yanyingwang/smtp/issues}.
