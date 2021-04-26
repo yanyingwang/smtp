@@ -17,7 +17,8 @@
                           (#:from string?
                            #:cc (listof string?)
                            #:bcc (listof string?)
-                           #:attached-files (listof (or/c path? string?)))
+                           #:attached-files (listof (or/c path? string?))
+                           #:body-content-type string?)
                           any)])
          send-smtp-mail)
 
