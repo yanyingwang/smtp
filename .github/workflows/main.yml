@@ -24,18 +24,26 @@ jobs:
       - name: build docs
         run: |
           # raco scribble --dest docs --dest-name index ++main-xref-in --redirect-main https://docs.racket-lang.org/ --redirect https://docs.racket-lang.org/local-redirect/index.html scribblings/smtp.scrbl
+          #raco scribble \
+          #--htmls \
+          #--dest-name docs \
+          #++main-xref-in \
+          #--redirect-main https://docs.racket-lang.org/ \
+          #--redirect https://docs.racket-lang.org/local-redirect/index.html \
+          #scribblings/smtp.scrbl
           raco scribble \
-          --htmls \
-          --dest-name docs \
+          --dest doc \
+          --dest-name index \
           ++main-xref-in \
           --redirect-main https://docs.racket-lang.org/ \
           --redirect https://docs.racket-lang.org/local-redirect/index.html \
           scribblings/smtp.scrbl
+
       - name: Deploy to GitHub Pages
         if: success()
         uses: crazy-max/ghaction-github-pages@v1.2.5
         with:
           target_branch: gh-pages
-          build_dir: docs
+          build_dir: doc
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
