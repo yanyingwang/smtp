@@ -8,35 +8,42 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        racket-version: [ "7.9" ]
-        racket-variant: [ "regular" ]
+        racket-version: ["stable"]
+        racket-variant: ["CS"]
     name: main
     steps:
-      - uses: actions/checkout@master
-      - uses: Bogdanp/setup-racket@v0.5
+      - uses: actions/checkout@v2
+      - uses: Bogdanp/setup-racket@v0.12
         with:
           architecture: x64
           distribution: full # or minimal
           variant: ${{ matrix.racket-variant }}
           version: ${{ matrix.racket-version }}
       - name: install deps
-        run: |
-          raco pkg install --auto
+        run: raco pkg install --auto
       - name: build docs
         run: |
           # raco scribble --dest docs --dest-name index ++main-xref-in --redirect-main https://docs.racket-lang.org/ --redirect https://docs.racket-lang.org/local-redirect/index.html scribblings/smtp.scrbl
+          #raco scribble \
+          #--htmls \
+          #--dest-name docs \
+          #++main-xref-in \
+          #--redirect-main https://docs.racket-lang.org/ \
+          #--redirect https://docs.racket-lang.org/local-redirect/index.html \
+          #scribblings/smtp.scrbl
           raco scribble \
-          --htmls \
-          --dest-name docs \
+          --dest doc \
+          --dest-name index \
           ++main-xref-in \
           --redirect-main https://docs.racket-lang.org/ \
           --redirect https://docs.racket-lang.org/local-redirect/index.html \
           scribblings/smtp.scrbl
+
       - name: Deploy to GitHub Pages
         if: success()
         uses: crazy-max/ghaction-github-pages@v1.2.5
         with:
           target_branch: gh-pages
-          build_dir: docs
+          build_dir: doc
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
