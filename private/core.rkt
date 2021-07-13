@@ -52,22 +52,19 @@
       })
 
 (define (mail-header/attachment mail)
-  (define files (mail-attached-files mail))
-  (if (and (list? files)
-           (not (empty? files)))
-      (string-join (map (lambda (f)
-                          @~a{
-                              --@boundary
-                              Content-Type: file --mime-type -b @(file-name-from-path f); name=@(file-name-from-path f);
-                              Content-Transfer-Encoding: base64
-                              Content-Disposition: attachment; filename=@(file-name-from-path f);
+  (let* ([files (mail-attached-files mail)]
+         [exd-files (for/list ([f files])
+                      (expand-user-path f))]
+         [contents (for/list ([f exd-files])
+                     @~a{
+                         --@boundary
+                         Content-Type: file --mime-type -b @(file-name-from-path f); name=@(file-name-from-path f);
+                         Content-Transfer-Encoding: base64
+                         Content-Disposition: attachment; filename=@(file-name-from-path f);
 
-                              @(base64-encode (port->string (open-input-file f)))
-                              })
-                         (map (lambda (f) (expand-user-path f)) files))
-                   "\n")
-      ""))
-
+                         @(base64-encode (port->string (open-input-file f)))
+                         })])
+    (string-join contents "\n")))
 
 
 (define (mail-header mail)
