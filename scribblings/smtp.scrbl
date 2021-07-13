@@ -89,7 +89,17 @@ we can just directly embed our pictures in the html content and send it:
 @racketinput[
 (define f-mail
    (make-mail "a test of html email"
-   "<html> <body> <div> <p>Taken from wikpedia</p> <img src=\"data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAUA AAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO 9TXL0Y4OHwAAAABJRU5ErkJggg==\" alt=\"Red dot\" /> </div> </body> </html>"
+   "<html>
+   <body>
+   <div>
+   <p>Taken from wikpedia</p>
+   <img src=\"data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAUA
+      AAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO
+      9TXL0Y4OHwAAAABJRU5ErkJggg==\"
+   alt=\"Red dot\" />
+   </div>
+   </body>
+   </html>"
               #:body-content-type "text/html"
               #:from "sender2@qq.com"
               #:to '("recipient1@qq.com")))
