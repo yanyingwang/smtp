@@ -13,7 +13,7 @@
 (define (b64en str)
   (bytes->string/utf-8 (base64-encode (string->bytes/utf-8 str))))
 (define (b64en-trim str)
-  (string-trim (b64en str)))
+  (~v (string-trim (b64en str))))
 
 (define boundary
   @~a{----=_Part_@(uuid-string)})
