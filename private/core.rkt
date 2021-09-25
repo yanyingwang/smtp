@@ -36,7 +36,7 @@
       From: @(mail-sender mail)
       To: @(string-join (mail-recipients mail) ", ")
       @~a{Cc: @(string-join (mail-cc-recipients mail) ", ")}
-      Subject: =?UTF-8?B?@(b64en-trim (mail-subject mail))?=
+      Subject: =?UTF-8?B?@(b64en (mail-subject mail))?=
       MIME-Version: 1.0
       Content-type: multipart/alternative; boundary="@boundary"
       Date: @(~t (now/moment) "E, d MMM yyyy HH:mm:ss Z")
