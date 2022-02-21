@@ -19,7 +19,7 @@
 (define (check-rsp? port code)
   (let ([rsp (utf8->string (get-bytevector-some port))])
     (when (current-smtp-debug-mode)
-      (displayln (format "==> ~a" rsp)))
+      (displayln (format "==> ~v" rsp)))
     (unless (string-prefix? rsp (number->string code))
       (error  @~a{smtp server @(current-smtp-host):
                        @rsp}))))
@@ -28,7 +28,7 @@
   (define newstr (string-append
                   (string-replace (string-trim str) "\n" "\r\n")
                   "\r\n"))
-  (fprintf port newstr)
-  (flush-output port)
   (when (current-smtp-debug-mode)
-    (displayln (format "==< ~a" str))))
+    (displayln (format "==< ~v" newstr)))
+  (display newstr port)
+  (flush-output port))
